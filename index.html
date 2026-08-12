@@ -102,6 +102,8 @@
     position: relative;
     box-shadow: 2px 3px 0 var(--line);
     transition: transform .15s ease, box-shadow .15s ease;
+    display: block;
+    text-decoration: none;
   }
   .card:nth-child(odd){ transform: rotate(-0.6deg); }
   .card:nth-child(even){ transform: rotate(0.5deg); }
@@ -132,9 +134,9 @@
   .card .launch{
     font-family:"IBM Plex Mono", monospace;
     font-size:0.8rem;
-    text-decoration:none;
     border-bottom: 1px solid var(--ink);
     padding-bottom:2px;
+    display:inline-block;
   }
   .card.placeholder{
     border-style: dashed;
@@ -170,7 +172,7 @@
       <div class="swatch" aria-hidden="true"></div>
       <h1>Plaid Labs</h1>
     </div>
-    <p class="tagline">Small experiments from the Plaid Scientist — added to as they happen.</p>
+    <p class="tagline">Small experiments from the Plaid Scientist — built on weekends, shipped for free, added to as they happen.</p>
   </header>
 
   <div class="swatch divider" aria-hidden="true"></div>
@@ -182,23 +184,23 @@
   <section class="deck">
 
     <!-- EXP. 001 -->
-    <article class="card" data-accent="green" data-status="live">
+    <a class="card" data-accent="green" data-status="live" href="https://theplaidscientist.github.io/dailydoodle/">
       <div class="top-bar" aria-hidden="true"></div>
       <div class="exp-no"><span class="dot"></span>EXP. 001 — LIVE</div>
       <h2>Daily Doodle</h2>
       <p>A drawing-prompt spinner — spin an animal, occupation, prop, or vehicle/style/medium combo and go draw it.</p>
-      <a class="launch" href="https://theplaidscientist.github.io/dailydoodle/">Launch →</a>
-    </article>
+      <span class="launch">Launch →</span>
+    </a>
 
     <!-- EXP. 002 -->
-    <article class="card" data-accent="rust" data-status="live">
+    <!-- TODO: confirm/replace this URL with the real Monster Maker Pages link -->
+    <a class="card" data-accent="rust" data-status="live" href="https://theplaidscientist.github.io/monster-maker/">
       <div class="top-bar" aria-hidden="true"></div>
       <div class="exp-no"><span class="dot"></span>EXP. 002 — LIVE</div>
       <h2>Monster Maker</h2>
       <p>A generator for cooking up random monsters — remix parts and traits into something new.</p>
-      <!-- TODO: confirm/replace this URL with the real Monster Maker Pages link -->
-      <a class="launch" href="https://theplaidscientist.github.io/monster-maker/">Launch →</a>
-    </article>
+      <span class="launch">Launch →</span>
+    </a>
 
     <!-- EXP. 003 -->
     <article class="card placeholder" data-status="soon">
@@ -207,10 +209,11 @@
 
     <!--
       TO ADD A NEW EXPERIMENT:
-      1. Copy one <article class="card">…</article> block above (not the .placeholder one).
+      1. Copy one <a class="card">…</a> block above (not the .placeholder one).
       2. Paste it before the .placeholder card.
-      3. Update: data-accent (green / rust / mustard — rotate through these),
-         EXP. number, title, one-line description, and the Launch href.
+      3. Update: href (the whole card links there now), data-accent
+         (green / rust / mustard — rotate through these), EXP. number,
+         title, and the one-line description.
     -->
 
   </section>
