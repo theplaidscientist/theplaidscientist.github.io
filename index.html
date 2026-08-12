@@ -7,7 +7,7 @@
 <meta name="description" content="A running log of small web experiments — drawing prompts, generators, and whatever's next.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Caveat:wght@700&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper: #eef1ea;
@@ -150,6 +150,46 @@
   }
   .card.placeholder:hover{ transform:none; }
 
+  /* --- field notes / journal, styled as a kraft-cover notepad --- */
+  .notes{ margin-bottom: 60px; }
+  .notepad{
+    --kraft: #c2a06e;
+    --kraft-ink: #3c2c19;
+    --kraft-line: rgba(60,44,25,0.22);
+    background: var(--kraft);
+    background-image: repeating-linear-gradient(to bottom, transparent 0 33px, var(--kraft-line) 33px 34px);
+    border: 1px solid #8f6f42;
+    border-radius: 4px 4px 10px 10px;
+    box-shadow: 2px 4px 0 var(--line);
+    padding: 24px 26px 18px;
+    font-family: "Special Elite", "IBM Plex Mono", monospace;
+    color: var(--kraft-ink);
+  }
+  .notepad-title{
+    font-family: "Caveat", cursive;
+    font-weight: 700;
+    font-size: 2.1rem;
+    line-height: 1;
+    margin: 0 0 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--kraft-line);
+  }
+  .note{
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--kraft-line);
+  }
+  .note:last-child{ border-bottom: none; padding-bottom: 4px; }
+  .note .date{
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    opacity: 0.75;
+    margin-bottom:4px;
+  }
+  .note h3{ font-size:1.05rem; font-weight:700; margin: 0 0 6px; }
+  .note p{ margin:0; opacity:0.85; font-size:0.92rem; max-width:60ch; }
+  .note a{ color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
   footer{
     border-top: 1px solid var(--line);
     padding: 26px 0 60px;
@@ -214,6 +254,26 @@
          (green / rust / mustard — rotate through these), EXP. number,
          title, and the one-line description.
     -->
+
+  </section>
+
+  <section class="notes">
+    <div class="notepad">
+      <p class="notepad-title">Field Notes</p>
+      <!-- Newest entry goes on top -->
+      <div class="note">
+        <div class="date">Aug 2026</div>
+        <h3>Plaid Labs is live</h3>
+        <p>Got the landing page up and both experiments linked. More entries — build notes, dead ends, stuff I'm tinkering with outside the experiments — go here as they happen.</p>
+      </div>
+
+      <!--
+        TO ADD A NEW FIELD NOTE:
+        1. Copy one <div class="note">…</div> block above.
+        2. Paste it right after this comment (newest on top).
+        3. Update the date, title, and text.
+      -->
+    </div>
 
   </section>
 
