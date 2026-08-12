@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plaid Labs — experiments by the Plaid Scientist</title>
+<meta name="description" content="A running log of small web experiments — drawing prompts, generators, and whatever's next.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #eef1ea;
+    --card: #f8f7f0;
+    --ink: #20262b;
+    --ink-soft: #545c63;
+    --line: rgba(32,38,43,0.14);
+    --green: #33513a;
+    --rust: #b1502e;
+    --mustard: #c99a1f;
+    --stripe-w: 6px;
+  }
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Public Sans", system-ui, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a{ color: inherit; }
+
+  .wrap{ max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+  /* subtle graph-paper texture */
+  body{
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
+  }
+
+  /* --- plaid swatch mark, used as logo + dividers --- */
+  .swatch{
+    --a: var(--green);
+    --b: var(--rust);
+    --c: var(--mustard);
+    background-color: var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, var(--a) 0 var(--stripe-w), transparent var(--stripe-w) calc(var(--stripe-w) * 4)),
+      repeating-linear-gradient(90deg, var(--b) 0 calc(var(--stripe-w) * 0.7), transparent calc(var(--stripe-w) * 0.7) calc(var(--stripe-w) * 5)),
+      repeating-linear-gradient(45deg, transparent 0 10px, var(--c) 10px 11px, transparent 11px 20px);
+  }
+
+  header{ padding: 56px 0 28px; }
+  .brand{ display:flex; align-items:center; gap:14px; }
+  .brand .swatch{ width:38px; height:38px; border-radius:4px; border:1px solid var(--line); flex:0 0 auto; }
+  .brand h1{
+    font-family: "IBM Plex Mono", monospace;
+    font-weight:600;
+    font-size: 1.15rem;
+    letter-spacing: 0.12em;
+    margin:0;
+    text-transform: uppercase;
+  }
+  .tagline{
+    margin: 14px 0 0;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+    max-width: 46ch;
+  }
+
+  .divider{ height:5px; border-radius:3px; margin: 30px 0 40px; }
+
+  .intro p{ color: var(--ink-soft); max-width: 58ch; }
+
+  .log-label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:0.75rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 18px;
+  }
+
+  .deck{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap:22px;
+    margin-bottom: 60px;
+  }
+
+  .card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 18px 18px 20px;
+    position: relative;
+    box-shadow: 2px 3px 0 var(--line);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:nth-child(odd){ transform: rotate(-0.6deg); }
+  .card:nth-child(even){ transform: rotate(0.5deg); }
+  .card:hover{ transform: rotate(0deg) translateY(-2px); box-shadow: 3px 5px 0 var(--line); }
+
+  .card .top-bar{
+    position:absolute; top:0; left:0; right:0; height:5px;
+    border-radius: 3px 3px 0 0;
+  }
+  .card[data-accent="green"] .top-bar{ background: var(--green); }
+  .card[data-accent="rust"] .top-bar{ background: var(--rust); }
+  .card[data-accent="mustard"] .top-bar{ background: var(--mustard); }
+
+  .exp-no{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:0.72rem;
+    letter-spacing:0.1em;
+    color: var(--ink-soft);
+    display:flex; align-items:center; gap:8px;
+    margin: 6px 0 10px;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background: var(--green); display:inline-block; }
+  .card[data-status="soon"] .dot{ background: var(--ink-soft); }
+
+  .card h2{ font-size:1.15rem; margin: 0 0 8px; }
+  .card p{ margin: 0 0 16px; color: var(--ink-soft); font-size:0.95rem; }
+
+  .card .launch{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:0.8rem;
+    text-decoration:none;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom:2px;
+  }
+  .card.placeholder{
+    border-style: dashed;
+    box-shadow:none;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--ink-soft);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:0.8rem;
+    text-align:center;
+    min-height: 120px;
+  }
+  .card.placeholder:hover{ transform:none; }
+
+  footer{
+    border-top: 1px solid var(--line);
+    padding: 26px 0 60px;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    display:flex; flex-wrap:wrap; gap: 8px 20px;
+    align-items:baseline;
+    justify-content: space-between;
+  }
+  footer .links a{ margin-right: 16px; text-decoration:none; border-bottom:1px solid var(--line); }
+  footer .links a:hover{ border-color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="swatch" aria-hidden="true"></div>
+      <h1>Plaid Labs</h1>
+    </div>
+    <p class="tagline">Small experiments from the Plaid Scientist — added to as they happen.</p>
+  </header>
+
+  <div class="swatch divider" aria-hidden="true"></div>
+
+  <section class="intro">
+    <p class="log-label">Experiment Log</p>
+  </section>
+
+  <section class="deck">
+
+    <!-- EXP. 001 -->
+    <article class="card" data-accent="green" data-status="live">
+      <div class="top-bar" aria-hidden="true"></div>
+      <div class="exp-no"><span class="dot"></span>EXP. 001 — LIVE</div>
+      <h2>Daily Doodle</h2>
+      <p>A drawing-prompt spinner — spin an animal, occupation, prop, or vehicle/style/medium combo and go draw it.</p>
+      <a class="launch" href="https://theplaidscientist.github.io/dailydoodle/">Launch →</a>
+    </article>
+
+    <!-- EXP. 002 -->
+    <article class="card" data-accent="rust" data-status="live">
+      <div class="top-bar" aria-hidden="true"></div>
+      <div class="exp-no"><span class="dot"></span>EXP. 002 — LIVE</div>
+      <h2>Monster Maker</h2>
+      <p>A generator for cooking up random monsters — remix parts and traits into something new.</p>
+      <!-- TODO: confirm/replace this URL with the real Monster Maker Pages link -->
+      <a class="launch" href="https://theplaidscientist.github.io/monster-maker/">Launch →</a>
+    </article>
+
+    <!-- EXP. 003 -->
+    <article class="card placeholder" data-status="soon">
+      EXP. 003<br>— next experiment goes here —
+    </article>
+
+    <!--
+      TO ADD A NEW EXPERIMENT:
+      1. Copy one <article class="card">…</article> block above (not the .placeholder one).
+      2. Paste it before the .placeholder card.
+      3. Update: data-accent (green / rust / mustard — rotate through these),
+         EXP. number, title, one-line description, and the Launch href.
+    -->
+
+  </section>
+
+  <footer>
+    <div class="links">
+      <a href="https://github.com/theplaidscientist">GitHub</a>
+      <a href="./CONTENT-LICENSE.md">License</a>
+    </div>
+    <div>© 2026 Andy Schelb — code MIT, content CC BY-NC 4.0</div>
+  </footer>
+
+</div>
+
+</body>
+</html>
