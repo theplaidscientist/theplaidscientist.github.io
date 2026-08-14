@@ -59,6 +59,7 @@
   .compare-stat{font-family:var(--font-mono);font-size:12.5px;color:var(--text-secondary);border-top:1px dashed var(--line-soft);padding-top:8px;margin-top:2px;width:100%;}
   .compare-stat b{color:var(--text-primary);}
   .compare-stat .eff{color:var(--reset-now);font-weight:bold;}
+  .compare-stat .gain{color:var(--good);}
   .compare-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding-top:60px;min-width:64px;}
   .arrow-icon{font-size:40px;line-height:1;color:var(--line-soft);transition:color .2s, transform .2s;}
   .arrow-icon.left{transform:scaleX(-1);}
@@ -86,7 +87,7 @@
 
   <footer>
     Fan-made, unofficial — not affiliated with Epic Games, Lucasfilm, or Disney. Values are community-sourced.<br>
-    <a href="https://insider-gaming.com/fortnite-star-wars-droid-tycoon-droidex-all-droids/" target="_blank">Droidex source</a> ·
+    <a href="https://tycoon-tools.com/droid-tycoon/value-list/" target="_blank">CPS value list source</a> ·
     <a href="https://insider-gaming.com/fortnite-star-wars-droid-tycoon-upgrade-droids/" target="_blank">Upgrade costs source</a>
   </footer>
 </div>
@@ -107,26 +108,61 @@
     Mythic:    { 1: 4000, 2: 8000, 3: 20000, 4: 40000, 5: 70000 }
   };
 
-  // Iconic droids (BB-8, Mister Bones, IG-11 Marshal, DJ-R3X, CB-23, R2-D2, C-3PO, C1-10P,
+  // Iconic droids (BB-8, Mister Bones, IG-11 Marshal, DJ-R3X, CB-23, R2-D2, C-3PO, C1-10P/Chopper,
   // and soon D-0) cannot be upgraded at all, so they're intentionally excluded from this list.
+  //
+  // CPS is stored per-droid as the exact value at each of the 6 tiers (not derived from a formula).
+  // Earlier versions assumed CPS simply doubles every tier — real per-tier growth turns out to be
+  // uneven and rarity-dependent (Common/Rare: x2,x2,x2,x1.5,x2 — Epic: x2,x2,x2,~x4.25,~x1.53 —
+  // Legendary: x2,x2,x2,~x3,~x2.5 — Mythic: x2,x2,x2,x2,~x2.75), confirmed against real in-game
+  // screenshots at Beskar tier. So each tier's CPS is listed explicitly below: [Tier, Gold, Diamond, Rainbow, Beskar, Galactic].
   var DROIDEX = [
-    ["Mouse","Common",2],["Pit","Common",2],["Gonk","Common",4],["CB","Common",3],
-    ["R3","Common",3],["R5","Common",3],["R8","Common",4],["Imperial Probe","Common",6],
-    ["B1 Battle","Common",5],["DRK-1 Probe","Common",3],["ID10","Common",4],
-    ["BDX Explorer","Rare",15],["ARG","Rare",42],["Senate Hovercam","Rare",46],
-    ["BU-4D","Rare",58],["Bal-Core","Rare",23],["ROLL-R","Rare",31],["2BB","Rare",17],
-    ["A-LT","Rare",36],["R4","Rare",50],["R9","Rare",54],["B1 Security","Rare",66],
-    ["NAV-EX","Rare",18],["VECT-Arm","Rare",27],["HOV-R","Rare",62],
-    ["Groundmech","Epic",120],["LO","Epic",240],["AMP Walker","Epic",570],
-    ["SEN-TRI","Epic",510],["Opti-Pod","Epic",380],["BB","Epic",150],["R2","Epic",360],
-    ["R6","Epic",300],["TRAK-R","Epic",330],["ORB-Walker","Epic",180],["Util-Tec","Epic",210],
-    ["B1 Heavy","Epic",630],["B2 Super","Epic",420],["B2 Heavy","Epic",480],
-    ["Strike-Orb","Epic",540],["Haul-R","Epic",270],["LNG-Shot","Epic",450],
-    ["Proto-Roller","Epic",972],
-    ["Mecha-Droid","Legendary",1040],["Mono-WLKR","Legendary",1120],["BB9","Legendary",900],
-    ["R7","Legendary",1190],["B2-RP","Legendary",1400],["Cyclo-Grav","Legendary",1260],
-    ["Opti-STRK","Legendary",1510]
-  ].map(function (r) { return { name: r[0], rarity: r[1], baseCps: r[2] }; });
+    ["Mouse","Common",[2,4,8,16,24,48]],["Pit","Common",[2,4,8,16,24,48]],
+    ["Gonk","Common",[4,8,16,32,48,96]],["R8","Common",[4,8,16,32,48,96]],
+    ["ID10","Common",[4,8,16,32,48,96]],
+    ["CB","Common",[3,6,12,24,36,72]],["R3","Common",[3,6,12,24,36,72]],
+    ["R5","Common",[3,6,12,24,36,72]],["DRK-1 Probe","Common",[3,6,12,24,36,72]],
+    ["B1 Battle","Common",[5,10,20,40,60,120]],["Imperial Probe","Common",[6,12,24,48,72,144]],
+
+    ["BDX Explorer","Rare",[15,30,60,120,180,360]],["2BB","Rare",[17,34,68,136,204,408]],
+    ["Bal-Core","Rare",[23,46,92,184,276,552]],["VECT-Arm","Rare",[27,54,108,216,324,648]],
+    ["ROLL-R","Rare",[31,62,124,248,372,744]],["A-LT","Rare",[36,72,144,288,432,864]],
+    ["ARG","Rare",[42,84,168,336,504,1000]],["Senate Hovercam","Rare",[46,92,184,368,552,1100]],
+    ["R4","Rare",[50,100,200,400,600,1200]],["R9","Rare",[54,108,216,432,648,1300]],
+    ["BU-4D","Rare",[58,116,232,464,696,1400]],["HOV-R","Rare",[62,124,248,496,744,1500]],
+    ["B1 Security","Rare",[66,132,264,528,792,1600]],["NAV-EX","Rare",[18,36,72,144,216,432]],
+
+    ["Groundmech","Epic",[120,240,480,960,4100,6200]],["BB","Epic",[150,300,600,1200,5100,7800]],
+    ["ORB-Walker","Epic",[180,360,720,1400,6100,9400]],["Util-Tec","Epic",[210,420,840,1700,7100,10900]],
+    ["LO","Epic",[240,480,960,1900,8200,12500]],["Haul-R","Epic",[270,540,1100,2200,9200,14000]],
+    ["R6","Epic",[300,600,1200,2400,10200,15600]],["TRAK-R","Epic",[330,660,1300,2600,11200,17200]],
+    ["R2","Epic",[360,720,1400,2900,12200,18700]],["Opti-Pod","Epic",[390,780,1600,3100,13300,20300]],
+    ["B2 Super","Epic",[420,840,1700,3400,14300,21800]],["LNG-Shot","Epic",[450,900,1800,3600,15300,23400]],
+    ["B2 Heavy","Epic",[480,960,1900,3800,16300,25000]],["SEN-TRI","Epic",[510,1000,2000,4100,17300,26500]],
+    ["Strike-Orb","Epic",[540,1100,2200,4300,18400,28100]],["AMP Walker","Epic",[570,1100,2300,4600,19400,29600]],
+    ["B1 Heavy","Epic",[630,1300,2500,4800,20400,31200]],["Gunrunner","Epic",[660,1300,2600,5300,22400,34300]],
+
+    ["Proto-Roller","Legendary",[972,1900,3900,7800,23300,58300]],
+    ["Mecha-Droid","Legendary",[1200,2500,5000,9900,29900,74600]],
+    ["Cyclo-Grav","Legendary",[1300,2500,5000,10100,30200,75600]],
+    ["BB9","Legendary",[1300,2600,5200,10400,31200,78000]],
+    ["B2-RP","Legendary",[1300,2600,5200,10400,31300,78200]],
+    ["Mono-WLKR","Legendary",[1500,3000,6000,12000,36000,90000]],
+    ["R7","Legendary",[1500,3000,6000,12000,36000,90000]],
+    ["Opti-STRK","Legendary",[1500,3000,6000,12000,36000,90000]],
+
+    ["Cyclens","Mythic",[4400,8800,17600,35200,70400,193600]],
+    ["Snow Mouse","Mythic",[4400,8800,17600,35200,70400,193600]],
+    ["Ric","Mythic",[5100,10200,20400,40800,81600,224400]],
+    ["Drft-R","Mythic",[5800,11600,23200,46400,92800,255200]],
+    ["IG","Mythic",[5800,11600,23200,46400,92800,255200]],
+    ["Ric-1200","Mythic",[5800,11600,23200,46400,92800,255200]],
+    ["Lep","Mythic",[6500,13000,26000,52000,104000,286000]],
+    ["Tri-Tek","Mythic",[6500,13000,26000,52000,104000,286000]],
+    ["Loadlifter","Mythic",[7200,14400,28800,57600,115200,316800]],
+    ["Mo-Trak","Mythic",[7200,14400,28800,57600,115200,316800]],
+    ["KX","Mythic",[7200,14400,28800,57600,115200,316800]]
+  ].map(function (r) { return { name: r[0], rarity: r[1], cps: r[2] }; });
 
   var costs = DEFAULT_COSTS; // internal only — not user-editable
   var slotA = { name: "", tier: 0 };
@@ -135,10 +171,6 @@
   function findDroid(name) { return DROIDEX.find(function (d) { return d.name === name; }); }
   function sortedNames() { return DROIDEX.map(function (d) { return d.name; }).sort(function (a, b) { return a.localeCompare(b); }); }
 
-  function cpsAt(baseCps, tier) {
-    if (baseCps === null || baseCps === undefined || isNaN(baseCps)) return null;
-    return baseCps * Math.pow(2, tier);
-  }
   function costFor(rarity, targetTier) {
     var row = costs[rarity]; if (!row) return null;
     var v = row[targetTier];
@@ -147,14 +179,14 @@
   function computeSlot(slot) {
     var d = findDroid(slot.name);
     if (!d) return null;
-    var curCps = cpsAt(d.baseCps, slot.tier);
+    var curCps = d.cps[slot.tier];
     var maxed = slot.tier >= TIERS.length - 1;
     var nextTier = maxed ? null : slot.tier + 1;
-    var nextCps = maxed ? null : cpsAt(d.baseCps, nextTier);
+    var nextCps = maxed ? null : d.cps[nextTier];
     var gain = (nextCps !== null && curCps !== null) ? (nextCps - curCps) : null;
     var cost = maxed ? null : costFor(d.rarity, nextTier);
     var eff = (gain !== null && cost) ? gain / cost : null;
-    return { d: d, curCps: curCps, maxed: maxed, nextTier: nextTier, gain: gain, cost: cost, eff: eff };
+    return { d: d, curCps: curCps, maxed: maxed, nextTier: nextTier, nextCps: nextCps, gain: gain, cost: cost, eff: eff };
   }
   function fmt(n) {
     if (n === null || n === undefined || isNaN(n)) return "—";
@@ -196,10 +228,16 @@
 
     if (d && c) {
       var line;
-      if (c.maxed) line = "already maxed";
-      else if (c.cost === null) line = TIERS[c.nextTier] + " chip cost not available";
-      else line = TIERS[c.nextTier] + ': ' + fmt(c.cost) + ' chips → +' + fmt(c.gain) + ' CPS — <span class="eff">' + fmtEff(c.eff) + '/chip</span>';
-      html += '<div class="compare-stat">now <b>' + fmt(c.curCps) + '</b> CPS<br>' + line + '</div>';
+      if (c.maxed) {
+        line = '<b>' + fmt(c.curCps) + '</b> CPS — already maxed at ' + TIERS[slot.tier];
+      } else if (c.cost === null) {
+        line = '<b>' + fmt(c.curCps) + '</b> CPS now — ' + TIERS[c.nextTier] + ' chip cost not available';
+      } else {
+        line = '<b>' + fmt(c.curCps) + '</b> CPS now → <b>' + fmt(c.nextCps) + '</b> CPS at ' + TIERS[c.nextTier] +
+          ' <span class="gain">(+' + fmt(c.gain) + ')</span>' +
+          '<br>' + fmt(c.cost) + ' chips — <span class="eff">' + fmtEff(c.eff) + '/chip</span>';
+      }
+      html += '<div class="compare-stat">' + line + '</div>';
     }
 
     el.innerHTML = html;
