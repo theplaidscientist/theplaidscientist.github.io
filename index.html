@@ -127,6 +127,7 @@
   }
   .dot{ width:7px; height:7px; border-radius:50%; background: var(--green); display:inline-block; }
   .card[data-status="soon"] .dot{ background: var(--ink-soft); }
+  .card[data-status="failed"] .dot{ background: var(--rust); }
 
   .card h2{ font-size:1.15rem; margin: 0 0 8px; }
   .card p{ margin: 0 0 16px; color: var(--ink-soft); font-size:0.95rem; }
@@ -242,8 +243,17 @@
     </a>
 
     <!-- EXP. 003 -->
+    <a class="card" data-accent="mustard" data-status="failed" href="./super-rebirth.html">
+      <div class="top-bar" aria-hidden="true"></div>
+      <div class="exp-no"><span class="dot"></span>EXP. 003 — FAILED</div>
+      <h2>Super Rebirth Break-Even Calculator</h2>
+      <p>I love playing Fortnite and they recently added a STAR WARS Droid Tycoon mode and I can't seem to get enough of it. I wanted to solve an issue that is a big part of the game, should I reset all my progress for more progress, or stay the course and keep going.</p>
+      <span class="launch">Keep Reading →</span>
+    </a>
+
+    <!-- EXP. 004 -->
     <article class="card placeholder" data-status="soon">
-      EXP. 003<br>— next experiment goes here —
+      EXP. 004<br>— next experiment goes here —
     </article>
 
     <!--
@@ -261,6 +271,12 @@
     <div class="notepad">
       <p class="notepad-title">Field Notes</p>
       <!-- Newest entry goes on top -->
+      <div class="note">
+        <div class="date">Aug 2026</div>
+        <h3>Exp. 003 postmortem: Super Rebirth Break-Even Calculator</h3>
+        <p>Wrote up the whole saga of trying to build a calculator for the "Super Rebirth" reset in Fortnite's Droid Tycoon mode — four rebuilds, real research, and a debate the community never actually settled. Filed under Failed, but a good one. <a href="./super-rebirth.html">Read the postmortem</a>.</p>
+      </div>
+
       <div class="note">
         <div class="date">Aug 2026</div>
         <h3>New Social Share Feature</h3>
