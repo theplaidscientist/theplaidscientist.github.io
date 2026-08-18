@@ -7,7 +7,7 @@
 <meta name="description" content="A running log of small web experiments — drawing prompts, generators, and whatever's next.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Caveat:wght@700&family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Caveat:wght@700&family=Special+Elite&family=Russo+One&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper: #eef1ea;
@@ -57,14 +57,14 @@
 
   header{ padding: 56px 0 28px; }
   .brand{ display:flex; align-items:center; gap:14px; }
-  .brand .swatch{ width:38px; height:38px; border-radius:4px; border:1px solid var(--line); flex:0 0 auto; }
+  .brand .brand-emoji{ font-size: 2.4rem; line-height:1; flex:0 0 auto; }
   .brand h1{
-    font-family: "IBM Plex Mono", monospace;
-    font-weight:600;
-    font-size: 1.15rem;
-    letter-spacing: 0.12em;
+    font-family: "Russo One", sans-serif;
+    font-weight:400;
+    /* 3x the card title size (.card h2 is 1.15rem), per request. */
+    font-size: 3.45rem;
+    letter-spacing: 0.02em;
     margin:0;
-    text-transform: uppercase;
   }
   .tagline{
     margin: 14px 0 0;
@@ -196,11 +196,16 @@
     padding: 26px 0 60px;
     color: var(--ink-soft);
     font-size: 0.85rem;
-    display:flex; flex-wrap:wrap; gap: 8px 20px;
-    align-items:baseline;
-    justify-content: space-between;
+    text-align: center;
+    display:flex; flex-direction:column; align-items:center; gap: 6px;
   }
-  footer .links a{ margin-right: 16px; text-decoration:none; border-bottom:1px solid var(--line); }
+  footer .footer-brand{
+    font-family: "Russo One", sans-serif;
+    font-weight: 400;
+    color: var(--ink);
+    font-size: 1rem;
+  }
+  footer .links a{ text-decoration:none; border-bottom:1px solid var(--line); }
   footer .links a:hover{ border-color: var(--ink); }
 </style>
 </head>
@@ -210,10 +215,10 @@
 
   <header>
     <div class="brand">
-      <div class="swatch" aria-hidden="true"></div>
+      <span class="brand-emoji" aria-hidden="true">🧪</span>
       <h1>Plaid Labs</h1>
     </div>
-    <p class="tagline">Small experiments from the Plaid Scientist.</p>
+    <p class="tagline">New experiments are being added all the time.</p>
   </header>
 
   <div class="swatch divider" aria-hidden="true"></div>
@@ -270,8 +275,17 @@
     </a>
 
     <!-- EXP. 006 -->
+    <a class="card" data-accent="mustard" data-status="live" href="https://theplaidscientist.github.io/sketchlabcentral/wall/submit.html">
+      <div class="top-bar" aria-hidden="true"></div>
+      <div class="exp-no"><span class="dot"></span>EXP. 006 — LIVE</div>
+      <h2>Sketch Lab Gallery</h2>
+      <p>We added a gallery to Sketch Lab Central. Now you can share your creativity and inspire others.</p>
+      <span class="launch">Share Your Art →</span>
+    </a>
+
+    <!-- EXP. 007 -->
     <article class="card placeholder" data-status="soon">
-      EXP. 006<br>— next experiment goes here —
+      EXP. 007<br>— next experiment goes here —
     </article>
 
     <!--
@@ -289,6 +303,12 @@
     <div class="notepad">
       <p class="notepad-title">Field Notes</p>
       <!-- Newest entry goes on top -->
+      <div class="note">
+        <div class="date">Aug 2026</div>
+        <h3>Exp. 006: Sketch Lab Gallery Live</h3>
+        <p>It was harder than it seemed to make a gallery where anyone can upload their image. We had to create a backend where there is a manual approval process which meant including a Gmail sign-in process and connecting to a cloud-based upload library. But it all works. Check out the <a href="https://theplaidscientist.github.io/sketchlabcentral/wall/">Gallery here</a>.</p>
+      </div>
+
       <div class="note">
         <div class="date">Aug 2026</div>
         <h3>Exp. 004: Droidex Advisor</h3>
@@ -330,14 +350,25 @@
   </section>
 
   <footer>
+    <div class="footer-brand"><span aria-hidden="true">🧪</span> Plaid Labs</div>
     <div class="links">
-      <a href="https://github.com/theplaidscientist">GitHub</a>
-      <a href="./CONTENT-LICENSE.md">License</a>
+      <a href="https://github.com/theplaidscientist">GitHub</a> ·
+      <a href="./CONTENT-LICENSE.md">License</a> ·
+      <a href="#" id="footer-contact-link" rel="nofollow noopener">Contact Us</a>
     </div>
     <div>© 2026 Andy Schelb — code MIT, content CC BY-NC 4.0</div>
   </footer>
 
 </div>
+
+<script>
+  // Assembled at runtime (never written as a literal string in the page
+  // source) as a light deterrent against address-harvesting bots.
+  (function () {
+    var link = document.getElementById('footer-contact-link');
+    if (link) link.href = 'mailto:' + 'plaidlabs' + '@' + 'gmail.com' + '?subject=' + encodeURIComponent('Plaid Labs');
+  })();
+</script>
 
 </body>
 </html>
