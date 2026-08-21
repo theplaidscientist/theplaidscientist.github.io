@@ -229,21 +229,32 @@
 
   <section class="deck">
 
-    <!-- EXP. 001 -->
-    <a class="card" data-accent="green" data-status="live" href="https://theplaidscientist.github.io/dailydoodle/">
+    <!-- Cards are listed newest-first so the most recent experiment shows first, especially on mobile. -->
+
+    <!-- EXP. 006 -->
+    <a class="card" data-accent="mustard" data-status="live" href="https://theplaidscientist.github.io/sketchlabcentral/wall/submit.html">
       <div class="top-bar" aria-hidden="true"></div>
-      <div class="exp-no"><span class="dot"></span>EXP. 001 — LIVE</div>
-      <h2>Daily Doodle</h2>
-      <p>A drawing-prompt spinner — spin an animal, occupation, prop, or vehicle/style/medium combo and go draw it.</p>
+      <div class="exp-no"><span class="dot"></span>EXP. 006 — LIVE</div>
+      <h2>Sketch Lab Gallery</h2>
+      <p>We added a gallery to Sketch Lab Central. Now you can share your creativity and inspire others.</p>
+      <span class="launch">Share Your Art →</span>
+    </a>
+
+    <!-- EXP. 005 -->
+    <a class="card" data-accent="rust" data-status="live" href="https://theplaidscientist.github.io/sketchlabcentral/">
+      <div class="top-bar" aria-hidden="true"></div>
+      <div class="exp-no"><span class="dot"></span>EXP. 005 — LIVE</div>
+      <h2>Sketch Lab Central</h2>
+      <p>Daily Doodle, Monster Maker, and a new Theme Park Edition — one drawing-prompt generator, pick a pack and spin.</p>
       <span class="launch">Launch →</span>
     </a>
 
-    <!-- EXP. 002 -->
-    <a class="card" data-accent="rust" data-status="live" href="https://theplaidscientist.github.io/monstermaker/">
+    <!-- EXP. 004 -->
+    <a class="card" data-accent="green" data-status="live" href="./droidex-advisor.html">
       <div class="top-bar" aria-hidden="true"></div>
-      <div class="exp-no"><span class="dot"></span>EXP. 002 — LIVE</div>
-      <h2>Monster Maker</h2>
-      <p>A generator for cooking up random monsters — remix parts and traits into something new.</p>
+      <div class="exp-no"><span class="dot"></span>EXP. 004 — LIVE</div>
+      <h2>Droidex Advisor</h2>
+      <p>Pick two droids and their tier, and this points to the better chip investment — ranked by CPS gained per chip, not sticker price. Fortnite Star Wars: Droid Tycoon.</p>
       <span class="launch">Launch →</span>
     </a>
 
@@ -256,31 +267,23 @@
       <span class="launch">Keep Reading →</span>
     </a>
 
-    <!-- EXP. 004 -->
-    <a class="card" data-accent="green" data-status="live" href="./droidex-advisor.html">
+    <!-- EXP. 002 -->
+    <a class="card" data-accent="rust" data-status="live" href="https://theplaidscientist.github.io/monstermaker/">
       <div class="top-bar" aria-hidden="true"></div>
-      <div class="exp-no"><span class="dot"></span>EXP. 004 — LIVE</div>
-      <h2>Droidex Advisor</h2>
-      <p>Pick two droids and their tier, and this points to the better chip investment — ranked by CPS gained per chip, not sticker price. Fortnite Star Wars: Droid Tycoon.</p>
+      <div class="exp-no"><span class="dot"></span>EXP. 002 — LIVE</div>
+      <h2>Monster Maker</h2>
+      <p>A generator for cooking up random monsters — remix parts and traits into something new.</p>
       <span class="launch">Launch →</span>
     </a>
 
-    <!-- EXP. 005 -->
-    <a class="card" data-accent="rust" data-status="live" href="https://theplaidscientist.github.io/sketchlabcentral/">
+    <!-- EXP. 001 -->
+    <a class="card" data-accent="green" data-status="live" href="https://discodoodle.com/daily-doodle.html">
       <div class="top-bar" aria-hidden="true"></div>
-      <div class="exp-no"><span class="dot"></span>EXP. 005 — LIVE</div>
-      <h2>Sketch Lab Central</h2>
-      <p>Daily Doodle, Monster Maker, and a new Theme Park Edition — one drawing-prompt generator, pick a pack and spin.</p>
-      <span class="launch">Launch →</span>
-    </a>
-
-    <!-- EXP. 006 -->
-    <a class="card" data-accent="mustard" data-status="live" href="https://theplaidscientist.github.io/sketchlabcentral/wall/submit.html">
-      <div class="top-bar" aria-hidden="true"></div>
-      <div class="exp-no"><span class="dot"></span>EXP. 006 — LIVE</div>
-      <h2>Sketch Lab Gallery</h2>
-      <p>We added a gallery to Sketch Lab Central. Now you can share your creativity and inspire others.</p>
-      <span class="launch">Share Your Art →</span>
+      <div class="exp-no"><span class="dot"></span>EXP. 001 — LIVE</div>
+      <h2>Daily Doodle</h2>
+      <p>A drawing-prompt spinner — spin an animal, occupation, prop, or vehicle/style/medium combo and go draw it.</p>
+      <p>This one grew up: Daily Doodle is now part of <strong>Disco Doodle</strong>, a whole drawing-prompt playground with Monster Maker, Theme Park Edition, and a gallery of everyone's art.</p>
+      <span class="launch">Visit Disco Doodle →</span>
     </a>
 
     <!-- EXP. 007 -->
@@ -291,7 +294,8 @@
     <!--
       TO ADD A NEW EXPERIMENT:
       1. Copy one <a class="card">…</a> block above (not the .placeholder one).
-      2. Paste it before the .placeholder card.
+      2. Paste it at the very top of this section (cards run newest-first,
+         with the .placeholder card always last).
       3. Update: href (the whole card links there now), data-accent
          (green / rust / mustard — rotate through these), EXP. number,
          title, and the one-line description.
