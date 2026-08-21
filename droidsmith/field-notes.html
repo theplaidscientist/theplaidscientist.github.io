@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EXP. 005 — Droidsmith — Field Notes — Plaid Labs</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#11151d; --line:#2a3242; --text:#e8ecf4; --dim:#8a93a6;
+    --amber:#ffcf5f; --green:#57e08a; --red:#ff6b6b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:40px 20px 80px;}
+  a{color:var(--amber);}
+  .back{display:inline-block; font-size:.85rem; color:var(--dim); text-decoration:none; margin-bottom:24px;}
+  .back:hover{color:var(--amber);}
+  .kicker{display:flex; align-items:center; gap:10px; font-size:.8rem; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; margin-bottom:10px;}
+  .badge{display:inline-block; font-size:.7rem; font-weight:700; letter-spacing:1px; padding:3px 10px; border-radius:999px; border:1px solid var(--amber); color:var(--amber); background:rgba(255,207,95,.08);}
+  h1{font-size:1.9rem; margin:0 0 6px;}
+  p.sub{color:var(--dim); margin:0 0 28px; font-size:1rem;}
+  .status-line{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:10px; padding:14px 18px; margin-bottom:32px; font-size:.92rem;}
+  .status-line b{color:var(--amber);}
+  .shots{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin:24px 0 36px;}
+  .shots figure{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px; text-align:center;}
+  .shots img{width:100%; border-radius:8px; display:block;}
+  .shots figcaption{font-size:.72rem; color:var(--dim); margin-top:8px;}
+  h2{font-size:1.15rem; color:var(--amber); margin:36px 0 10px;}
+  p{margin:0 0 14px; font-size:.95rem;}
+  ul{margin:0 0 14px; padding-left:20px; font-size:.95rem;}
+  li{margin-bottom:6px;}
+  .card-recap{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin:18px 0; font-size:.9rem; color:var(--dim);}
+  .card-recap b{color:var(--text);}
+  footer{margin-top:50px; padding-top:20px; border-top:1px solid var(--line); font-size:.78rem; color:var(--dim);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../">← Back to the log</a>
+
+  <div class="kicker">🧪 EXP. 005 <span class="badge">PENDING REVIEW</span></div>
+  <h1>Droidsmith</h1>
+  <p class="sub">A flip-card study depot and randomized trivia game for every named droid in Star Wars canon.</p>
+
+  <div class="status-line">
+    <b>Status:</b> not live, not failed — pending review. The game works end to end. It's not shipped because I haven't settled a copyright question and, honestly, it looks a little silly without it.
+  </div>
+
+  <div class="shots">
+    <figure><img src="screens/01-home.png" alt="Droidsmith home screen"><figcaption>Home screen</figcaption></figure>
+    <figure><img src="screens/02-card-front.png" alt="Flashcard front, unflipped"><figcaption>Card front</figcaption></figure>
+    <figure><img src="screens/03-card-back.png" alt="Flashcard back with droid details"><figcaption>Card flipped</figcaption></figure>
+    <figure><img src="screens/04-quiz.png" alt="Trivia question screen"><figcaption>Trivia mode</figcaption></figure>
+    <figure><img src="screens/05-results.png" alt="Results screen with rank"><figcaption>Rank results</figcaption></figure>
+  </div>
+
+  <h2>What it is</h2>
+  <p>
+  Study-by-chapter flashcards covering ~60 named droids — every trilogy, the anthology films, the animated shows,
+  the live-action Mando-era shows, and a "Legacy &amp; Parks" chapter for the Star Tours / Galaxy's Edge droids.
+  Each card flips to show first appearance, function, a droid "class," famous and alternate versions, and a trivia note.
+  There's a randomized trivia mode on top, scored arcade-style with rank tiers, Buzz Lightyear Space Ranger Spin-style.
+  </p>
+
+  <h2>Why it's not live</h2>
+  <p>
+  Two reasons, and they're related.
+  </p>
+  <ul>
+    <li><b>Copyright.</b> I don't have a clean answer on whether droid photos/official art can go on the cards.
+    Fan wikis run on their own fair-use footing; I don't want to assume the same latitude applies here without
+    actually working it out first. Until I do, the cards use original vector silhouettes instead of real images.</li>
+    <li><b>It looks silly without them.</b> A droid trivia game where you can't actually <em>see</em> the droids
+    is a weird product. The placeholder art is fine for playtesting, not fine as the shipped thing.</li>
+  </ul>
+
+  <div class="card-recap">
+  Options on the table: license or commission original art per droid, find a defensible fair-use path for a
+  small set of reference thumbnails, or just ship it card-back-first (data and trivia are the actual value)
+  and treat the art as a later pass. No decision yet — that's why this sits at Pending Review instead of Live.
+  </div>
+
+  <h2>What's already working</h2>
+  <p>
+  Chapter checkboxes, flip-card study mode, shuffle, an auto-generated trivia engine (era / class / claim-to-fame /
+  famous-moment questions with real distractors), scoring with streaks, and six rank tiers from "Bantha Fodder"
+  to "Grand Master Droidsmith." The data itself — first appearances, functions, variants, trivia — is the part
+  I'm most confident shipping as-is.
+  </p>
+
+  <footer>
+    Droidsmith is an unreleased build. Droid names and Star Wars are trademarks of Lucasfilm Ltd./Disney,
+    referenced here for trivia purposes only — no official art or stills are used.
+  </footer>
+</div>
+</body>
+</html>

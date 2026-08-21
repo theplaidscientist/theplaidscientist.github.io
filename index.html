@@ -128,6 +128,7 @@
   .dot{ width:7px; height:7px; border-radius:50%; background: var(--green); display:inline-block; }
   .card[data-status="soon"] .dot{ background: var(--ink-soft); }
   .card[data-status="failed"] .dot{ background: var(--rust); }
+  .card[data-status="pending"] .dot{ background: var(--mustard); }
 
   .card h2{ font-size:1.15rem; margin: 0 0 8px; }
   .card p{ margin: 0 0 16px; color: var(--ink-soft); font-size:0.95rem; }
@@ -231,31 +232,40 @@
 
     <!-- Cards are listed newest-first so the most recent experiment shows first, especially on mobile. -->
 
-    <!-- EXP. 007 -->
+    <!-- EXP. 008 -->
     <a class="card" data-accent="green" data-status="live" href="https://discodoodle.com/">
       <div class="top-bar" aria-hidden="true"></div>
-      <div class="exp-no"><span class="dot"></span>EXP. 007 — LIVE</div>
+      <div class="exp-no"><span class="dot"></span>EXP. 008 — LIVE</div>
       <h2>Disco Doodle</h2>
       <p>Daily Doodle grew up. It's now the heart of Disco Doodle — a proper home at discodoodle.com with Monster Maker, Theme Park Edition, and a gallery for sharing what you drew.</p>
       <span class="launch">Visit Disco Doodle →</span>
     </a>
 
-    <!-- EXP. 006 -->
+    <!-- EXP. 007 -->
     <a class="card" data-accent="mustard" data-status="live" href="https://discodoodle.com/wall/submit.html">
       <div class="top-bar" aria-hidden="true"></div>
-      <div class="exp-no"><span class="dot"></span>EXP. 006 — LIVE</div>
+      <div class="exp-no"><span class="dot"></span>EXP. 007 — LIVE</div>
       <h2>Sketch Lab Gallery</h2>
       <p>We added a gallery to Sketch Lab Central. Now you can share your creativity and inspire others.</p>
       <span class="launch">Share Your Art →</span>
     </a>
 
-    <!-- EXP. 005 -->
+    <!-- EXP. 006 -->
     <a class="card" data-accent="rust" data-status="live" href="https://discodoodle.com/">
       <div class="top-bar" aria-hidden="true"></div>
-      <div class="exp-no"><span class="dot"></span>EXP. 005 — LIVE</div>
+      <div class="exp-no"><span class="dot"></span>EXP. 006 — LIVE</div>
       <h2>Sketch Lab Central</h2>
       <p>Daily Doodle, Monster Maker, and a new Theme Park Edition — one drawing-prompt generator, pick a pack and spin.</p>
       <span class="launch">Launch →</span>
+    </a>
+
+    <!-- EXP. 005 -->
+    <a class="card" data-accent="mustard" data-status="pending" href="./droidsmith/field-notes.html">
+      <div class="top-bar" aria-hidden="true"></div>
+      <div class="exp-no"><span class="dot"></span>EXP. 005 — PENDING REVIEW</div>
+      <h2>Droidsmith</h2>
+      <p>A flip-card study depot and randomized trivia game covering 60+ named Star Wars droids across every trilogy, the animated shows, and the live-action Mando-era shows — shelved pending a copyright and art call.</p>
+      <span class="launch">Field Notes →</span>
     </a>
 
     <!-- EXP. 004 -->
@@ -294,9 +304,9 @@
       <span class="launch">Launch →</span>
     </a>
 
-    <!-- EXP. 008 -->
+    <!-- EXP. 009 -->
     <article class="card placeholder" data-status="soon">
-      EXP. 008<br>— next experiment goes here —
+      EXP. 009<br>— next experiment goes here —
     </article>
 
     <!--
@@ -317,7 +327,7 @@
       <!-- Newest entry goes on top -->
       <div class="note">
         <div class="date">Aug 2026</div>
-        <h3>Exp. 006: Sketch Lab Gallery Live</h3>
+        <h3>Exp. 007: Sketch Lab Gallery Live</h3>
         <p>It was harder than it seemed to make a gallery where anyone can upload their image. We had to create a backend where there is a manual approval process which meant including a Gmail sign-in process and connecting to a cloud-based upload library. But it all works. Check out the <a href="https://discodoodle.com/wall/">Gallery here</a>.</p>
       </div>
 
