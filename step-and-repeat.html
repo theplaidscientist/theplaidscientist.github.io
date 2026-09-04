@@ -218,6 +218,23 @@
 
   .foot-note{ font-size: 11px; color: var(--ink-faint); line-height: 1.5; }
 
+  .emoji-toggle{ width: 100%; margin-top: 10px; }
+  .emoji-panel{ margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  input[type="text"]{
+    width: 100%; font-family: var(--font-body); font-size: 14px; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--line-strong); border-radius: 6px;
+    padding: 9px 10px; text-align: center;
+  }
+  .emoji-quick{
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;
+    margin: 10px 0;
+  }
+  .emoji-quick button{
+    font-size: 18px; line-height: 1; padding: 7px 0; border-radius: 6px;
+    border: 1px solid var(--line-strong); background: var(--paper); cursor: pointer;
+  }
+  .emoji-quick button:hover{ border-color: var(--accent); background: var(--accent-soft); }
+
   .panel-foot{
     padding: 14px 20px 18px; border-top: 1px solid var(--line);
     display: flex; gap: 8px; background: var(--panel); flex-shrink: 0;
@@ -435,6 +452,24 @@
           <div class="gallery" id="imageGallery"></div>
           <p class="foot-note">Add up to <span id="maxImagesLabel"></span> images — the pattern mixes them at random as it repeats. Transparent PNGs work best.</p>
           <input type="file" id="fileInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" multiple hidden>
+
+          <button class="pill emoji-toggle" id="emojiToggleBtn" type="button">🙂 Add an emoji</button>
+          <div class="emoji-panel" id="emojiPanel" hidden>
+            <div class="row">
+              <div class="row-label">Style</div>
+              <div class="pills" id="emojiStylePills">
+                <button class="pill active" data-style="system" type="button">Device</button>
+                <button class="pill" data-style="google" type="button">Google</button>
+                <button class="pill" data-style="open" type="button">Open</button>
+              </div>
+              <p class="row-hint" id="emojiStyleDesc">Uses whatever emoji art your own device already draws — no extra download.</p>
+            </div>
+            <div class="row">
+              <input type="text" id="emojiInput" placeholder="Type or paste an emoji…" maxlength="8">
+            </div>
+            <div class="emoji-quick" id="emojiQuick"></div>
+            <button class="primary" id="emojiAddBtn" type="button" style="width:100%; margin-top:2px;">Add to Motifs</button>
+          </div>
         </div>
       </details>
 
@@ -1019,6 +1054,7 @@
    "shadowEnabled","shadowColor","shadowBlur","shadowOffsetX","shadowOffsetY","shadowOpacity",
    "presetSelect","customW","customH","bgMode","bgColor1","bgColor2","bgAngle",
    "fileInput","imageGallery","motifGroup","maxImagesLabel","modeDesc",
+   "emojiToggleBtn","emojiPanel","emojiStylePills","emojiStyleDesc","emojiInput","emojiQuick","emojiAddBtn",
    "previewCanvas","canvasWrap","stageFrame","dimsLabel","countLabel","perfNote",
    "exportBtn","shuffleBtn",
    "a2hsBanner","a2hsText","a2hsInstallBtn","a2hsClose",
@@ -1244,6 +1280,156 @@
   els.fileInput.addEventListener("change", function(e){
     if(e.target.files && e.target.files.length) addImages(e.target.files);
     e.target.value = "";
+  });
+
+  // ---- emoji motifs ----
+  // Three art styles: your device's own emoji font (no download, and already
+  // Apple/Windows/Android-flavored depending who's looking), Google's Noto
+  // Color Emoji (loaded as a real webfont so it looks the same everywhere),
+  // and OpenMoji — a fully open-source, CC BY-SA-licensed set with its own
+  // flat "universal" look, not owned by any platform. Twitter/X's Twemoji
+  // was deliberately left out.
+
+  var EMOJI_QUICK = ["😀","😂","🥹","😍","😎","🥳","😭","🤩","👍","🙌","❤️","🔥",
+    "✨","🌟","🎉","🌈","🐶","🐱","🦄","🐙","🌵","🍕","🍩","☕","🌸","🍀","⭐","☀️","🌙","⚡"];
+
+  var EMOJI_STYLE_DESC = {
+    system: "Uses whatever emoji art your own device already draws — no extra download.",
+    google: "Loads Google's Noto Color Emoji so it looks the same on any device.",
+    open: "OpenMoji — an open-source, platform-neutral emoji set (CC BY-SA 4.0)."
+  };
+  var EMOJI_FALLBACK_STACK = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Noto Emoji", sans-serif';
+
+  var emojiStyle = "system";
+  var notoLoadPromise = null;
+
+  function ensureNotoLoaded(){
+    if(notoLoadPromise) return notoLoadPromise;
+    if(!(document.fonts && document.fonts.load)){
+      notoLoadPromise = Promise.resolve(false);
+      return notoLoadPromise;
+    }
+    notoLoadPromise = Promise.race([
+      document.fonts.load('64px "Noto Color Emoji"').then(function(){ return true; }).catch(function(){ return false; }),
+      new Promise(function(res){ setTimeout(function(){ res(false); }, 2500); })
+    ]);
+    return notoLoadPromise;
+  }
+
+  function rasterizeSystemEmoji(emojiChar, fontStack, size){
+    var c = document.createElement("canvas");
+    c.width = size; c.height = size;
+    var cctx = c.getContext("2d");
+    cctx.clearRect(0, 0, size, size);
+    cctx.textAlign = "center";
+    cctx.textBaseline = "middle";
+    cctx.font = Math.round(size * 0.8) + "px " + fontStack;
+    cctx.fillText(emojiChar, size / 2, size / 2 + size * 0.04);
+    return c;
+  }
+
+  function codepointsFor(str){
+    return Array.prototype.map.call(Array.from(str), function(ch){
+      return ch.codePointAt(0).toString(16).toUpperCase();
+    }).filter(function(hex){ return hex !== "FE0F"; }).join("-");
+  }
+
+  function loadOpenMojiImage(emojiChar){
+    var cps = codepointsFor(emojiChar);
+    var url = "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@latest/color/svg/" + cps + ".svg";
+    return fetch(url).then(function(res){
+      if(!res.ok) throw new Error("not found");
+      return res.blob();
+    }).then(function(blob){
+      return new Promise(function(resolve, reject){
+        var im = new Image();
+        var objUrl = URL.createObjectURL(blob);
+        im.onload = function(){ URL.revokeObjectURL(objUrl); resolve(im); };
+        im.onerror = function(){ URL.revokeObjectURL(objUrl); reject(new Error("bad svg")); };
+        im.src = objUrl;
+      });
+    });
+  }
+
+  function renderEmojiToCanvas(emojiChar, style, size){
+    size = size || 512;
+    if(style === "google"){
+      return ensureNotoLoaded().then(function(ok){
+        if(!ok) showToast("Couldn't load Google's emoji style — using your device's instead.");
+        var stack = ok ? '"Noto Color Emoji", ' + EMOJI_FALLBACK_STACK : EMOJI_FALLBACK_STACK;
+        return rasterizeSystemEmoji(emojiChar, stack, size);
+      });
+    }
+    if(style === "open"){
+      return loadOpenMojiImage(emojiChar).then(function(im){
+        var c = document.createElement("canvas");
+        c.width = size; c.height = size;
+        var pad = size * 0.06;
+        c.getContext("2d").drawImage(im, pad, pad, size - pad * 2, size - pad * 2);
+        return c;
+      }).catch(function(){
+        showToast("That emoji isn't available in the Open style — using your device's instead.");
+        return rasterizeSystemEmoji(emojiChar, EMOJI_FALLBACK_STACK, size);
+      });
+    }
+    return Promise.resolve(rasterizeSystemEmoji(emojiChar, EMOJI_FALLBACK_STACK, size));
+  }
+
+  function addEmojiImage(charOverride){
+    var emojiChar = (charOverride || els.emojiInput.value || "").trim();
+    if(!emojiChar){ showToast("Type or pick an emoji first."); return; }
+    var atCapacity = state.images.length >= MAX_IMAGES && !(state.images.length === 1 && state.images[0].isDefault);
+    if(atCapacity){ showToast("Up to " + MAX_IMAGES + " images at a time."); return; }
+
+    els.emojiAddBtn.disabled = true;
+    var prevLabel = els.emojiAddBtn.textContent;
+    els.emojiAddBtn.textContent = "Adding…";
+
+    renderEmojiToCanvas(emojiChar, emojiStyle, 512).then(function(canvasEl){
+      var dataUrl = canvasEl.toDataURL("image/png");
+      var img = new Image();
+      img.onload = function(){
+        if(state.images.length === 1 && state.images[0].isDefault){ state.images = []; }
+        if(state.images.length >= MAX_IMAGES){
+          showToast("Up to " + MAX_IMAGES + " images at a time.");
+        } else {
+          state.images.push({ id: "img" + (++imgCounter), label: emojiChar + " emoji", img: img, isDefault: false, dataUrl: dataUrl });
+          renderImageGallery();
+          scheduleRender();
+          els.emojiInput.value = "";
+        }
+        els.emojiAddBtn.textContent = prevLabel; els.emojiAddBtn.disabled = false;
+      };
+      img.onerror = function(){
+        showToast("Couldn't add that emoji.");
+        els.emojiAddBtn.textContent = prevLabel; els.emojiAddBtn.disabled = false;
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  els.emojiToggleBtn.addEventListener("click", function(){
+    els.emojiPanel.hidden = !els.emojiPanel.hidden;
+  });
+  Array.prototype.forEach.call(els.emojiStylePills.children, function(btn){
+    btn.addEventListener("click", function(){
+      emojiStyle = btn.getAttribute("data-style");
+      Array.prototype.forEach.call(els.emojiStylePills.children, function(b2){ b2.classList.toggle("active", b2 === btn); });
+      els.emojiStyleDesc.textContent = EMOJI_STYLE_DESC[emojiStyle] || "";
+    });
+  });
+  els.emojiQuick.innerHTML = "";
+  EMOJI_QUICK.forEach(function(e){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = e;
+    b.setAttribute("aria-label", "Add " + e);
+    b.addEventListener("click", function(){ addEmojiImage(e); });
+    els.emojiQuick.appendChild(b);
+  });
+  els.emojiAddBtn.addEventListener("click", function(){ addEmojiImage(); });
+  els.emojiInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); addEmojiImage(); }
   });
 
   ["dragenter","dragover"].forEach(function(ev){
