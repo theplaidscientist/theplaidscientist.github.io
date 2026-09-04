@@ -959,7 +959,12 @@
     modalSaveBtn.textContent = 'Saving…';
     getDownloads().then((downloads) => {
       if (!downloads) {
-        if (isClaudeSurface()) {
+        // On iOS Safari an <a download> lands in Files, not Photos — the
+        // only reliable native path to Photos is the long-press-on-<img>
+        // gesture, so point there instead of "saving" the wrong way.
+        if (isIOS()) {
+          showToast('Press and hold the image above, then choose “Add to Photos.”');
+        } else if (isClaudeSurface()) {
           showToast('Use the image above — press and hold (or right-click) to save it.');
         } else {
           nativeDownloadFallback();
@@ -972,7 +977,9 @@
         .then((res) => showToast(res && res.status === 'delivered' ? 'Sent.' : `Saved as ${lastExportName}.`))
         .catch((err) => {
           if (!err || err.code === 'declined') return;
-          if (isClaudeSurface()) {
+          if (isIOS()) {
+            showToast('Press and hold the image above, then choose “Add to Photos.”');
+          } else if (isClaudeSurface()) {
             showToast('Couldn’t save — try pressing and holding the image instead.');
           } else {
             nativeDownloadFallback();
