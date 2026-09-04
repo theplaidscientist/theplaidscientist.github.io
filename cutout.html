@@ -952,44 +952,58 @@
     }
   }
 
-  modalSaveBtn.addEventListener('click', () => {
+  // The OS share sheet (Web Share API, files) is the most reliable tap-to-save
+  // path on iOS/Android — it puts "Save Image"/"Add to Photos" one tap away,
+  // rather than depending on the long-press gesture actually registering
+  // (which can get eaten by the modal's scroll container on some devices).
+  async function tryShareFile() {
+    if (!(navigator.share && navigator.canShare)) return false;
+    try {
+      const file = new File([lastExportBlob], lastExportName, { type: 'image/png' });
+      if (!navigator.canShare({ files: [file] })) return false;
+      await navigator.share({ files: [file] });
+      return true;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return true; // user backed out of the share sheet — not a failure
+      return false;
+    }
+  }
+
+  modalSaveBtn.addEventListener('click', async () => {
     if (!lastExportBlob) return;
     modalSaveBtn.disabled = true;
     const prevLabel = modalSaveBtn.textContent;
     modalSaveBtn.textContent = 'Saving…';
-    getDownloads().then((downloads) => {
-      if (!downloads) {
-        // On iOS Safari an <a download> lands in Files, not Photos — the
-        // only reliable native path to Photos is the long-press-on-<img>
-        // gesture, so point there instead of "saving" the wrong way.
-        if (isIOS()) {
-          showToast('Press and hold the image above, then choose “Add to Photos.”');
-        } else if (isClaudeSurface()) {
-          showToast('Use the image above — press and hold (or right-click) to save it.');
-        } else {
-          nativeDownloadFallback();
+    try {
+      const downloads = await getDownloads();
+      if (downloads) {
+        try {
+          const res = await downloads.save({ filename: lastExportName, data: lastExportBlob });
+          showToast(res && res.status === 'delivered' ? 'Sent.' : `Saved as ${lastExportName}.`);
+          return;
+        } catch (err) {
+          if (!err || err.code === 'declined') return;
+          // fall through to the share sheet / long-press / anchor fallback below
         }
-        modalSaveBtn.textContent = prevLabel;
-        modalSaveBtn.disabled = false;
+      }
+
+      if (await tryShareFile()) {
+        showToast('Saved.');
         return;
       }
-      downloads.save({ filename: lastExportName, data: lastExportBlob })
-        .then((res) => showToast(res && res.status === 'delivered' ? 'Sent.' : `Saved as ${lastExportName}.`))
-        .catch((err) => {
-          if (!err || err.code === 'declined') return;
-          if (isIOS()) {
-            showToast('Press and hold the image above, then choose “Add to Photos.”');
-          } else if (isClaudeSurface()) {
-            showToast('Couldn’t save — try pressing and holding the image instead.');
-          } else {
-            nativeDownloadFallback();
-          }
-        })
-        .then(() => {
-          modalSaveBtn.textContent = prevLabel;
-          modalSaveBtn.disabled = false;
-        });
-    });
+
+      // No downloads capability and no Web Share support for files — last resorts.
+      if (isIOS()) {
+        showToast('Press and hold the image above, then choose “Add to Photos.”');
+      } else if (isClaudeSurface()) {
+        showToast('Use the image above — press and hold (or right-click) to save it.');
+      } else {
+        nativeDownloadFallback();
+      }
+    } finally {
+      modalSaveBtn.textContent = prevLabel;
+      modalSaveBtn.disabled = false;
+    }
   });
 
   downloadBtn.addEventListener('click', () => {
@@ -1007,7 +1021,7 @@
       // gives iOS Safari's long-press menu a reliable "Add to Photos".
       exportPreviewImg.src = resultCanvas.toDataURL('image/png');
       exportHint.textContent = isIOS()
-        ? 'Press and hold the image above, then choose “Add to Photos” or “Save Image.” Or tap Save Image below.'
+        ? 'Tap Save Image below and choose Save Image from the share sheet — or press and hold the image above and choose “Add to Photos.”'
         : 'Tap Save Image to download it, or right-click / long-press the image above to save it directly.';
       exportModal.hidden = false;
       setStatus(`Ready to save as ${lastExportName}.`);
