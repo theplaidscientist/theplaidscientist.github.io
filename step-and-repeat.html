@@ -1,4 +1,5 @@
 <title>Step &amp; Repeat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@500;700&family=Major+Mono+Display&display=swap">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -218,6 +219,29 @@
 
   .foot-note{ font-size: 11px; color: var(--ink-faint); line-height: 1.5; }
 
+  .freq-list{
+    margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .freq-title{ font-size: 11px; color: var(--ink-faint); line-height: 1.5; margin: 0 0 2px; }
+  .freq-row{ display: flex; align-items: center; gap: 10px; }
+  .freq-thumb{
+    width: 32px; height: 32px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+    border: 1px solid var(--line-strong);
+    background:
+      linear-gradient(45deg, var(--line) 25%, transparent 25%), linear-gradient(-45deg, var(--line) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--line) 75%), linear-gradient(-45deg, transparent 75%, var(--line) 75%);
+    background-size: 10px 10px; background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+    background-color: var(--paper-dim);
+  }
+  .freq-thumb img, .freq-thumb canvas{ width: 100%; height: 100%; object-fit: contain; display: block; }
+  .freq-controls{ flex: 1; min-width: 0; }
+  .freq-controls .row-label{ margin-bottom: 3px; }
+  .freq-controls .row-label span{
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; display: inline-block;
+  }
+  .freq-controls input[type="range"]{ padding: 6px 0; }
+
   .panel-foot{
     padding: 14px 20px 18px; border-top: 1px solid var(--line);
     display: flex; gap: 8px; background: var(--panel); flex-shrink: 0;
@@ -352,7 +376,15 @@
 
   @media (max-width: 880px){
     .app{ display: flex; flex-direction: column; height: auto; min-height: 100vh; }
-    .stage{ order: 1; flex: none; height: 46vh; min-height: 300px; }
+    /* Sticky so the preview stays reachable (for the eyedropper, etc.) while
+       you scroll down through the control panel below it — otherwise it
+       scrolls out of view and you can't sample colors from it without
+       scrolling back up mid-gesture. */
+    .stage{
+      order: 1; flex: none; height: 38vh; min-height: 260px;
+      position: sticky; top: 0; z-index: 20;
+      box-shadow: 0 6px 16px -8px rgba(0,0,0,.25);
+    }
     .panel{ order: 2; flex: none; border-right: none; max-height: none; }
     .panel-scroll{ overflow: visible; padding-bottom: 96px; }
     .panel-foot{
@@ -429,12 +461,28 @@
 
     <div class="panel-scroll">
 
+      <details class="ctl-group" id="looksGroup">
+        <summary class="ctl-group-title"><span>Saved Looks</span><span class="gt-line"></span><span class="chev">⌄</span></summary>
+        <div class="ctl-body">
+          <div class="row">
+            <select id="lookSelect"></select>
+          </div>
+          <div class="field-inline" style="gap:8px;">
+            <button class="ghost" id="lookSaveBtn" type="button" style="flex:1;">Save As…</button>
+            <button class="ghost" id="lookDeleteBtn" type="button" style="flex:1;" disabled>Delete</button>
+          </div>
+          <p class="row-hint">Saves your layout, spacing, rotation, outline/shadow, canvas size and background — not your images, so it stays quick. Handy for switching between clients or events.</p>
+        </div>
+      </details>
+
       <details class="ctl-group" id="motifGroup" open>
         <summary class="ctl-group-title"><span>Motifs</span><span class="gt-line"></span><span class="chev">⌄</span></summary>
         <div class="ctl-body">
           <div class="gallery" id="imageGallery"></div>
           <p class="foot-note">Add up to <span id="maxImagesLabel"></span> images — the pattern mixes them at random as it repeats. Transparent PNGs work best.</p>
           <input type="file" id="fileInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" multiple hidden>
+
+          <div class="freq-list" id="freqList" hidden></div>
         </div>
       </details>
 
@@ -770,7 +818,7 @@
   }
 
   function makeDefaultImageEntry(){
-    return { id: "default", label: "Default motif", img: makeDefaultMotif(), isDefault: true, dataUrl: null };
+    return { id: "default", label: "Default motif", img: makeDefaultMotif(), isDefault: true, dataUrl: null, weight: 50, scale: 1 };
   }
 
   // ---------------- tile bitmap ----------------
@@ -956,7 +1004,7 @@
     ctx.fillRect(0, 0, w, h);
   }
 
-  function renderPattern(ctx, w, h, tileInfos, s, rng, imgRng){
+  function renderPattern(ctx, w, h, tileInfos, s, rng, imgRng, weights, scales){
     ctx.clearRect(0, 0, w, h);
     fillBackground(ctx, w, h, s.bg);
     var vb = computeVirtualBounds(w, h);
@@ -975,14 +1023,42 @@
     ctx.translate(w / 2, h / 2);
     ctx.rotate(s.patternAngle * Math.PI / 180);
     var multi = tileInfos.length > 1;
+
+    // Weighted pick: each instance draws one imgRng() sample and walks the
+    // cumulative weight table to find which image it lands on — so a low-
+    // weight image (e.g. a "Where's Waldo" surprise) shows up rarely while
+    // staying fully reproducible from the same seed.
+    var totalWeight = 0, cum = null;
+    if(multi){
+      var w0 = (weights && weights.length === tileInfos.length) ? weights : tileInfos.map(function(){ return 1; });
+      cum = new Array(w0.length);
+      for(var ci = 0; ci < w0.length; ci++){
+        totalWeight += (w0[ci] > 0 ? w0[ci] : 0);
+        cum[ci] = totalWeight;
+      }
+      if(totalWeight <= 0){
+        totalWeight = w0.length;
+        for(var cj = 0; cj < cum.length; cj++) cum[cj] = cj + 1;
+      }
+    }
+
     for(var i = 0; i < instances.length; i++){
       var inst = instances[i];
-      var info = multi ? tileInfos[Math.floor(imgRng() * tileInfos.length)] : tileInfos[0];
+      var idx;
+      if(multi){
+        var r = imgRng() * totalWeight;
+        idx = cum.length - 1;
+        for(var k = 0; k < cum.length; k++){ if(r < cum[k]){ idx = k; break; } }
+      } else {
+        idx = 0;
+      }
+      var info = tileInfos[idx];
       if(!info) continue;
+      var extraScale = (scales && scales[idx]) ? scales[idx] : 1;
       ctx.save();
       ctx.translate(inst.x, inst.y);
       ctx.rotate(inst.rot);
-      ctx.scale(inst.scale, inst.scale);
+      ctx.scale(inst.scale * extraScale, inst.scale * extraScale);
       ctx.drawImage(info.canvas, -info.w / 2, -info.h / 2);
       ctx.restore();
     }
@@ -1018,7 +1094,8 @@
    "outlineEnabled","outlineColor","outlineWidth",
    "shadowEnabled","shadowColor","shadowBlur","shadowOffsetX","shadowOffsetY","shadowOpacity",
    "presetSelect","customW","customH","bgMode","bgColor1","bgColor2","bgAngle",
-   "fileInput","imageGallery","motifGroup","maxImagesLabel","modeDesc",
+   "fileInput","imageGallery","freqList","motifGroup","maxImagesLabel","modeDesc",
+   "lookSelect","lookSaveBtn","lookDeleteBtn",
    "previewCanvas","canvasWrap","stageFrame","dimsLabel","countLabel","perfNote",
    "exportBtn","shuffleBtn",
    "a2hsBanner","a2hsText","a2hsInstallBtn","a2hsClose",
@@ -1123,9 +1200,11 @@
     var ss = scaledState(state, previewScale);
     var maxDim = Math.max(3, ss.tileSize);
     var tileInfos = state.images.map(function(entry){ return getTileBitmap(entry, maxDim, ss); });
+    var weights = state.images.map(function(entry){ return entry.weight || 1; });
+    var scales = state.images.map(function(entry){ return entry.scale || 1; });
     var rng = mulberry32(state.seed);
     var imgRng = mulberry32((state.seed ^ 0x2545F491) >>> 0);
-    var count = renderPattern(ctx, els.previewCanvas.width, els.previewCanvas.height, tileInfos, ss, rng, imgRng);
+    var count = renderPattern(ctx, els.previewCanvas.width, els.previewCanvas.height, tileInfos, ss, rng, imgRng, weights, scales);
     els.dimsLabel.innerHTML = "<b>" + state.canvasDims.w + " × " + state.canvasDims.h + "</b> px";
     els.countLabel.textContent = count.toLocaleString() + " tiles";
     els.perfNote.textContent = count >= MAX_INSTANCES ? "truncated — increase spacing" : "";
@@ -1143,7 +1222,7 @@
         offsetPct: state.offsetPct, tileAngle: state.tileAngle, angleMode: state.angleMode, angleVariance: state.angleVariance,
         alignPath: state.alignPath, taperCenter: state.taperCenter, scaleVariance: state.scaleVariance, patternAngle: state.patternAngle,
         outline: state.outline, shadow: state.shadow, bg: state.bg, canvasDims: state.canvasDims, presetKey: state.presetKey, seed: state.seed,
-        images: state.images.filter(function(i){ return !i.isDefault; }).map(function(i){ return { label: i.label, dataUrl: i.dataUrl }; })
+        images: state.images.filter(function(i){ return !i.isDefault; }).map(function(i){ return { label: i.label, dataUrl: i.dataUrl, weight: i.weight, scale: i.scale }; })
       };
       var json = JSON.stringify(payload);
       if(json.length > 4200000){
@@ -1161,6 +1240,110 @@
       return JSON.parse(raw);
     } catch(e){ return null; }
   }
+
+  // ---- saved looks (named presets — layout only, not your images) ----
+
+  var LOOKS_KEY = "stepAndRepeat.looks.v1";
+  var LOOK_FIELDS = ["mode","tileSize","spacingX","spacingY","offsetPct","tileAngle","angleMode",
+    "angleVariance","alignPath","taperCenter","scaleVariance","patternAngle","presetKey","seed"];
+
+  function loadLooks(){
+    try{
+      var raw = localStorage.getItem(LOOKS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch(e){ return {}; }
+  }
+
+  function saveLooks(looks){
+    try{
+      localStorage.setItem(LOOKS_KEY, JSON.stringify(looks));
+      return true;
+    } catch(e){
+      showToast("Couldn't save — your browser storage may be full.");
+      return false;
+    }
+  }
+
+  function snapshotLookPayload(){
+    var payload = {};
+    LOOK_FIELDS.forEach(function(k){ payload[k] = state[k]; });
+    payload.outline = state.outline;
+    payload.shadow = state.shadow;
+    payload.bg = state.bg;
+    payload.canvasDims = state.canvasDims;
+    return payload;
+  }
+
+  function applyLookPayload(payload){
+    LOOK_FIELDS.forEach(function(k){
+      if(payload[k] !== undefined) state[k] = payload[k];
+    });
+    if(payload.outline) state.outline = Object.assign({}, state.outline, payload.outline);
+    if(payload.shadow) state.shadow = Object.assign({}, state.shadow, payload.shadow);
+    if(payload.bg) state.bg = Object.assign({}, state.bg, payload.bg);
+    if(payload.canvasDims && payload.canvasDims.w && payload.canvasDims.h) state.canvasDims = payload.canvasDims;
+    finishInit();
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(persistState, 700);
+  }
+
+  function refreshLookSelect(){
+    var looks = loadLooks();
+    var names = Object.keys(looks).sort(function(a, b){ return a.localeCompare(b); });
+    els.lookSelect.innerHTML = "";
+    var opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = names.length ? "— Select a saved look —" : "— No saved looks yet —";
+    els.lookSelect.appendChild(opt0);
+    names.forEach(function(name){
+      var opt = document.createElement("option");
+      opt.value = name; opt.textContent = name;
+      els.lookSelect.appendChild(opt);
+    });
+    els.lookSelect.value = "";
+    els.lookDeleteBtn.disabled = true;
+  }
+
+  els.lookSelect.addEventListener("change", function(){
+    var name = els.lookSelect.value;
+    els.lookDeleteBtn.disabled = !name;
+    if(!name) return;
+    var looks = loadLooks();
+    if(looks[name]){
+      applyLookPayload(looks[name]);
+      // finishInit() (called from applyLookPayload) refreshes the select list,
+      // which resets it to blank — restore the just-loaded name as selected.
+      els.lookSelect.value = name;
+      els.lookDeleteBtn.disabled = false;
+      showToast("Loaded “" + name + "”.");
+    }
+  });
+
+  els.lookSaveBtn.addEventListener("click", function(){
+    var name = window.prompt("Save this look as:", els.lookSelect.value || "");
+    if(name === null) return;
+    name = name.trim();
+    if(!name){ showToast("Give it a name to save."); return; }
+    var looks = loadLooks();
+    var isNew = !looks[name];
+    looks[name] = snapshotLookPayload();
+    if(!saveLooks(looks)) return;
+    refreshLookSelect();
+    els.lookSelect.value = name;
+    els.lookDeleteBtn.disabled = false;
+    showToast(isNew ? "Saved “" + name + "”." : "Updated “" + name + "”.");
+  });
+
+  els.lookDeleteBtn.addEventListener("click", function(){
+    var name = els.lookSelect.value;
+    if(!name) return;
+    if(!window.confirm("Delete the saved look “" + name + "”?")) return;
+    var looks = loadLooks();
+    delete looks[name];
+    saveLooks(looks);
+    refreshLookSelect();
+    showToast("Deleted “" + name + "”.");
+  });
 
   // ---- images ----
 
@@ -1198,6 +1381,107 @@
       add.addEventListener("click", function(){ els.fileInput.click(); });
       wrap.appendChild(add);
     }
+    renderFrequencyControls();
+  }
+
+  // Lets each image carry a relative "frequency" weight (1–100) and its own
+  // "size" multiplier, so the pattern can mix them unevenly and at different
+  // scales — e.g. one small, rare image among common ones, Where's-Waldo
+  // style — instead of always picking uniformly at random, all the same size.
+  function renderFrequencyControls(){
+    var wrap = els.freqList;
+    wrap.innerHTML = "";
+    var real = state.images.filter(function(i){ return !i.isDefault; });
+    if(real.length < 2){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+
+    var title = document.createElement("p");
+    title.className = "freq-title";
+    title.textContent = "Frequency & size — how often each image shows up, and how big. Shrink a rare one down for a Where's-Waldo surprise.";
+    wrap.appendChild(title);
+
+    real.forEach(function(entry){
+      var row = document.createElement("div");
+      row.className = "freq-row";
+
+      var thumb = document.createElement("div");
+      thumb.className = "freq-thumb";
+      var isCanvas = entry.img.tagName === "CANVAS";
+      var t = document.createElement(isCanvas ? "canvas" : "img");
+      if(isCanvas){
+        t.width = entry.img.width; t.height = entry.img.height;
+        t.getContext("2d").drawImage(entry.img, 0, 0);
+      } else {
+        t.src = entry.img.src; t.alt = "";
+      }
+      thumb.appendChild(t);
+
+      var controls = document.createElement("div");
+      controls.className = "freq-controls";
+
+      var freqLabel = document.createElement("div");
+      freqLabel.className = "row-label";
+      var nameSpan = document.createElement("span");
+      nameSpan.textContent = entry.label;
+      nameSpan.title = entry.label;
+      var pctSmall = document.createElement("small");
+      freqLabel.appendChild(nameSpan);
+      freqLabel.appendChild(pctSmall);
+
+      var freqSlider = document.createElement("input");
+      freqSlider.type = "range"; freqSlider.min = "1"; freqSlider.max = "100";
+      freqSlider.value = entry.weight || 50;
+      freqSlider.setAttribute("aria-label", "Frequency for " + entry.label);
+      freqSlider.addEventListener("input", function(){
+        entry.weight = +freqSlider.value;
+        refreshFrequencyPercentages();
+        scheduleRender();
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(persistState, 700);
+      });
+
+      var sizeLabel = document.createElement("div");
+      sizeLabel.className = "row-label";
+      sizeLabel.style.marginTop = "8px";
+      var sizeNameSpan = document.createElement("span");
+      sizeNameSpan.textContent = "Size";
+      var sizeSmall = document.createElement("small");
+      sizeLabel.appendChild(sizeNameSpan);
+      sizeLabel.appendChild(sizeSmall);
+
+      var sizeSlider = document.createElement("input");
+      sizeSlider.type = "range"; sizeSlider.min = "30"; sizeSlider.max = "250";
+      sizeSlider.value = Math.round((entry.scale || 1) * 100);
+      sizeSlider.setAttribute("aria-label", "Size for " + entry.label);
+      sizeSlider.addEventListener("input", function(){
+        entry.scale = (+sizeSlider.value) / 100;
+        sizeSmall.textContent = entry.scale.toFixed(2) + "x";
+        scheduleRender();
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(persistState, 700);
+      });
+      sizeSmall.textContent = (entry.scale || 1).toFixed(2) + "x";
+
+      controls.appendChild(freqLabel);
+      controls.appendChild(freqSlider);
+      controls.appendChild(sizeLabel);
+      controls.appendChild(sizeSlider);
+      row.appendChild(thumb);
+      row.appendChild(controls);
+      row._entry = entry;
+      row._pctEl = pctSmall;
+      wrap.appendChild(row);
+    });
+    refreshFrequencyPercentages();
+  }
+
+  function refreshFrequencyPercentages(){
+    var rows = Array.prototype.slice.call(els.freqList.children).filter(function(el){ return el._entry; });
+    var total = rows.reduce(function(sum, row){ return sum + (row._entry.weight || 1); }, 0) || 1;
+    rows.forEach(function(row){
+      var pct = Math.round((row._entry.weight || 1) / total * 100);
+      row._pctEl.textContent = "≈" + pct + "%";
+    });
   }
 
   function setImages(list){
@@ -1234,7 +1518,7 @@
       if(state.images.length >= MAX_IMAGES){ showToast("Up to " + MAX_IMAGES + " images at a time."); return; }
       readImageFile(file, function(img, dataUrl){
         if(state.images.length >= MAX_IMAGES){ showToast("Up to " + MAX_IMAGES + " images at a time."); return; }
-        state.images.push({ id: "img" + (++imgCounter), label: file.name, img: img, isDefault: false, dataUrl: dataUrl });
+        state.images.push({ id: "img" + (++imgCounter), label: file.name, img: img, isDefault: false, dataUrl: dataUrl, weight: 50, scale: 1 });
         renderImageGallery();
         scheduleRender();
       });
@@ -1500,7 +1784,12 @@
     els.modalSaveBtn.textContent = "Saving…";
     getDownloads().then(function(downloads){
       if(!downloads){
-        if(isClaudeSurface()){
+        // iOS Safari doesn't reliably honor the <a download> trick — it just
+        // opens/no-ops instead of saving — so on iOS always point at the
+        // long-press flow rather than attempting a download that won't work.
+        if(isIOS()){
+          showToast("Use the image above — press and hold it, then choose “Add to Photos” or “Save Image.”");
+        } else if(isClaudeSurface()){
           showToast("Use the image above — press and hold (or right‑click) to save it.");
         } else {
           nativeDownloadFallback();
@@ -1512,7 +1801,7 @@
         .then(function(res){ showToast(res && res.status === "delivered" ? "Sent." : "Saved."); })
         .catch(function(err){
           if(!err || err.code === "declined") return;
-          if(isClaudeSurface()){
+          if(isIOS() || isClaudeSurface()){
             showToast("Couldn't save — try pressing and holding the image instead.");
           } else {
             nativeDownloadFallback();
@@ -1536,9 +1825,11 @@
         var ss = scaledState(state, 1);
         var maxDim = Math.min(ss.tileSize, 2200);
         var tileInfos = state.images.map(function(entry){ return buildTileBitmap(entry.img, Math.max(3, maxDim), ss); });
+        var weights = state.images.map(function(entry){ return entry.weight || 1; });
+        var scales = state.images.map(function(entry){ return entry.scale || 1; });
         var rng = mulberry32(state.seed);
         var imgRng = mulberry32((state.seed ^ 0x2545F491) >>> 0);
-        renderPattern(fctx, w, h, tileInfos, ss, rng, imgRng);
+        renderPattern(fctx, w, h, tileInfos, ss, rng, imgRng, weights, scales);
         lastExportName = "step-and-repeat-" + w + "x" + h + ".png";
         els.exportPreviewImg.src = full.toDataURL("image/png");
         els.exportHint.textContent = isIOS()
@@ -1584,6 +1875,7 @@
     applyPreset(state.presetKey, true);
     updatePreviewSize();
     scheduleRender();
+    refreshLookSelect();
   }
 
   function init(){
@@ -1622,7 +1914,7 @@
       if(!entry || !entry.dataUrl){ settle(); return; }
       var im = new Image();
       im.onload = function(){
-        loaded[idx] = { id: "img" + (++imgCounter), label: entry.label || "Image", img: im, isDefault: false, dataUrl: entry.dataUrl };
+        loaded[idx] = { id: "img" + (++imgCounter), label: entry.label || "Image", img: im, isDefault: false, dataUrl: entry.dataUrl, weight: entry.weight || 50, scale: entry.scale || 1 };
         settle();
       };
       im.onerror = settle;
